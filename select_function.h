@@ -89,21 +89,21 @@ class Tree{
  private:
   string tree[16], cur;
  public:
-  void Tree(){
+  Tree(){
     for(i=0;i<16;i++){
       tree[i]="t";
     }
     cur="t";
   }
-  char pwd(int i){
+  string pwd(int i){
     return tree[i];
   }
-  char curr(){
+  string curr(){
     return cur;
   }
   void next(){
     if(i=0;i<16;i++){
-      if(tree[i].endsWith("e")){}
+      if(tree[i].endsWith("e")){}//間違ってるっぽい
       else{
         cur=tree[i];
       }
