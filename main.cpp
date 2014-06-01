@@ -7,9 +7,9 @@
 #include <time.h>
 #include <stdlib.h>
 #include<math.h>
+#define T 1 //サブセットの個数
 using namespace std;
 double a[155], b[155], c[155], d[155];  int e[155];
-int T=1;//サブセットの個数
 int i, j, k, l;
 //Set s;
 //Tree tr;
@@ -17,9 +17,9 @@ int i, j, k, l;
 
 class Set{
 private:
-  int y, num[30][16];
-  double sa[30][16], sb[30][16], sc[30][16], sd[30][16];
-  int se[30][16];
+  int y, num[T][16];
+  double sa[T][16], sb[T][16], sc[T][16], sd[T][16];
+  int se[T][16];
 public:
   int ii, jj, kk, ll;
   Set(){
@@ -34,7 +34,7 @@ public:
     num[p][y]=x;
   }
   void print(){
-    for (ii=0;ii<30;ii++){
+    for (ii=0;ii<T;ii++){
       for (jj=0;jj<16;jj++){
         cout<<"num:"<<num[ii][jj]<<"["<<ii<<"]["<<jj<<"]"<< " sa:" <<sa[ii][jj]<<" sb:" <<sb[ii][jj]<<" sc:" <<sc[ii][jj] <<" sd:"<<sd[ii][jj]<<" se:"<<se[ii][jj]<<endl;
       }
@@ -95,12 +95,14 @@ private:
   string tree[16], cur;
 public:
   Tree(){
-    for(i=0;i<16;i++){
-      tree[i]="t";
+    for(j=0;j<T;j++){
+      for(i=0;i<16;i++){
+        tree[i]="t";
+      }
     }
     cur="t";
   }
-  string return_last(int i){
+  string return_last( int i){
     return tree[tree[i].length()-1];
   }
   bool depth_of_cur_is_max (int D){
@@ -189,7 +191,7 @@ public:
     }
   }
 
-  bool search(int T){//entropy 0?
+  bool search(int t){//entropy 0?
     int c1,c2,c3;
     c1=0;c2=0;c3=0;
     if(Tree::return_last(1)=="t"){
@@ -197,13 +199,13 @@ public:
     }
     for(i=0;i<16;i++){
       if(Tree::curr()==Tree::pwd(i)){
-        if(Set::se_out(T-1, i)==1){
+        if(Set::se_out(t-1, i)==1){
           c1++;
         }
-        if(Set::se_out(T-1, i)==2){
+        if(Set::se_out(t-1, i)==2){
           c2++;
         }
-        if(Set::se_out(T-1, i)==3){
+        if(Set::se_out(t-1, i)==3){
           c3++;
         }
       }
@@ -216,12 +218,12 @@ public:
 
 
 
-  void learn(int depth, int K, int ty, int T){
+  void learn(int depth, int K, int ty, int t){
     depth++;
-    for(j=0;j<T;j++){//TkonoSubset nituite
+    for(j=0;j<t;j++){//TkonoSubset nituite
       while(Tree::next_exist()){//mattann made itterumonoganakereba
-        if(divide_function::search(T)||Tree::depth_of_cur_is_max(depth)){//entropy 0 or depth max
-          if(divide_function::search(T))cout<<"search"<<endl;
+        if(divide_function::search(t)||Tree::depth_of_cur_is_max(depth)){//entropy 0 or depth max
+          if(divide_function::search(t))cout<<"search"<<endl;
           if(Tree::depth_of_cur_is_max(depth))cout<<"depthmax"<<endl;
           for(i=0;i<16;i++){
             if(Tree::check_pwd(i)){
