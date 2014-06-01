@@ -9,7 +9,7 @@
 #include<math.h>
 using namespace std;
 double a[155], b[155], c[155], d[155];  int e[155];
-int T=30;//サブセットの個数
+int T=1;//サブセットの個数
 int i, j, k, l;
 //Set s;
 //Tree tr;
@@ -85,10 +85,7 @@ public:
     }
   }
   double se_out(int j, int k){
-    if(i==0){
-      //cout<<"return sa["<<j<<"]["<<k<<"]:"<<sa[j][k]<<endl;
-      return se[j][k];
-    }
+    return se[j][k];
   }
 };
 
@@ -102,6 +99,18 @@ public:
       tree[i]="t";
     }
     cur="t";
+  }
+  string return_last(int i){
+    return tree[tree[i].length()-1];
+  }
+  bool depth_of_cur_is_max (int D){
+    if(cur.length()<D){
+      cout<<"cur.length"<<cur.length()<<endl;
+      return false;
+    }
+    else{
+      return true;
+    }
   }
   void state(){
     Tree::curr();
@@ -119,7 +128,7 @@ public:
   }
   void next(){
     for(i=0;i<16;i++){
-      if(tree[tree[i].length()-1]=="e"){}
+      if(tree[i].at(tree[i].length()-1)=='e'){}
       else{
         cur=tree[i];
         cout<<"cur->"<<cur<<endl;
@@ -130,11 +139,14 @@ public:
 
   }
   bool next_exist(){
+    if(tree[i].at(tree[i].length()-1)=='t')return true;
     for(i=0;i<16;i++){
-      if(tree[tree[i].length()-1]!="e"){
+      if(tree[i].at(tree[i].length()-1)!='e'){
+        cout<<"tree last:"<<tree[i].at(tree[i].length()-1)<<endl;
         return true;
       }
     }
+    cout<<"tree last:"<<tree[i].at(tree[i].length()-1)<<endl;
     return false;
   }
   void left(int i){
@@ -180,15 +192,18 @@ public:
   bool search(int T){//entropy 0?
     int c1,c2,c3;
     c1=0;c2=0;c3=0;
+    if(Tree::return_last(1)=="t"){
+      return false;
+    }
     for(i=0;i<16;i++){
       if(Tree::curr()==Tree::pwd(i)){
-        if(Set::se_out(T, i)==1){
+        if(Set::se_out(T-1, i)==1){
           c1++;
         }
-        if(Set::se_out(T, i)==2){
+        if(Set::se_out(T-1, i)==2){
           c2++;
         }
-        if(Set::se_out(T, i)==3){
+        if(Set::se_out(T-1, i)==3){
           c3++;
         }
       }
@@ -202,9 +217,12 @@ public:
 
 
   void learn(int depth, int K, int ty, int T){
+    depth++;
     for(j=0;j<T;j++){//TkonoSubset nituite
       while(Tree::next_exist()){//mattann made itterumonoganakereba
-        if(divide_function::search(T)||){//entropy 0 or depth max
+        if(divide_function::search(T)||Tree::depth_of_cur_is_max(depth)){//entropy 0 or depth max
+          if(divide_function::search(T))cout<<"search"<<endl;
+          if(Tree::depth_of_cur_is_max(depth))cout<<"depthmax"<<endl;
           for(i=0;i<16;i++){
             if(Tree::check_pwd(i)){
               Tree::end(i);
@@ -232,8 +250,11 @@ public:
           left_[i]=0;
           right_[i]=0;
         }
-        r[i]=6;
-        //r[i]=(double)((rand()/((double)RAND_MAX+1))*8);
+        //r[i]=6;
+        //int tmp=100;
+        //r[i]=(double)(rand()%100)/(double)100*8+3;
+        srand((unsigned)time(NULL));
+        r[i]=rand()%6+4;
         cout<<"r["<<i<<"]:"<<r[i]<<endl;
 
         for (j=0;j<16;j++){
@@ -374,7 +395,7 @@ int main (int argc, char *argv[]){
       //cout<< "i"<<i<<"   j"<<j<<endl;
     }
   }
-  s.print();
+  //s.print();
   
 
   //サブセットの数だけ木を作成する
@@ -386,7 +407,7 @@ int main (int argc, char *argv[]){
     tr.right(0);
     tr.end(0);
     dv.check(1, 1);*/
-  s.check(2,1);
+  //s.check(2,1);
   //"lrle"
   //サブセットデータに現在のディレクトリ情報を持たせておく
   //if エントロピーが０ もしくは深さmax 何もない
@@ -394,9 +415,11 @@ int main (int argc, char *argv[]){
   for(i=0;i<16;i++){
     //tr.pwd(i);
   }
-  s.next();s.state();
-  s.next();  s.next();  s.next();
+  //s.next();s.state();
+  //s.next();  s.next();  s.next();
 
+  s.learn(3, 1, 1, 1);
+  s.state();
   return 0;
 }
 
