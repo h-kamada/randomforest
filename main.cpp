@@ -7,10 +7,10 @@
 #include <time.h>
 #include <stdlib.h>
 #include<math.h>
-#define T 300 //サブセットの個数
-#define D 3
-#define K 100
-#define N 500
+#define T 4 //サブセットの個数
+#define D 5
+#define K 2
+#define N 50
 using namespace std;
 double a[150], b[150], c[150], d[150];  int e[150];
 //Set s;
@@ -18,8 +18,19 @@ double a[150], b[150], c[150], d[150];  int e[150];
 //divide_function dv;
 
 typedef struct {
-  int a[T][N];
+  int type[T][N];//case1 or2
+  string cur[T][N];
+  int ty_case2[T][N];//case in case2
+  double r[T][N];//r in case1
+  int n[T];//実際に必要だったノードの数
 }div_ans;
+
+typedef struct{
+  string cur;//curの場所
+  int ty_case1or2, ty_in_case2;
+  double r;//case1におけるしきい値r
+}check_res;
+
 
 class Set{
 private:
@@ -42,7 +53,7 @@ public:
   void print(){
     for (ii=0;ii<T;ii++){
       for (jj=0;jj<16;jj++){
-        //cout<<"num:"<<num[ii][jj]<<"["<<ii<<"]["<<jj<<"]"<< " sa:" <<sa[ii][jj]<<" sb:" <<sb[ii][jj]<<" sc:" <<sc[ii][jj] <<" sd:"<<sd[ii][jj]<<" se:"<<se[ii][jj]<<endl;
+        cout<<"num:"<<num[ii][jj]<<"["<<ii<<"]["<<jj<<"]"<< " sa:" <<sa[ii][jj]<<" sb:" <<sb[ii][jj]<<" sc:" <<sc[ii][jj] <<" sd:"<<sd[ii][jj]<<" se:"<<se[ii][jj]<<endl;
       }
     }
   }
@@ -179,6 +190,11 @@ public:
 
       }*/
   void next(int t){
+    // cout<<"tree状況:";
+    for(int i=0;i<16;i++){
+      //cout<<" "<<tree[t][i];
+    }
+    //cout<<endl;
     for(int i=0;i<16;i++){
       //cout<<"length of tree["<<t<<"]["<<i<<"]:"<<tree[t][i].length()<<endl;
       //cout<<"t:"<<t<<endl;
@@ -283,11 +299,7 @@ class divide_function : public Tree, public Set{
 public:
   int max, t, type_tmp, n_len[T];
   double rmax_tmp, Hl, left, right, left_[3], right_[3], Hr;//I 情報利得
-  //string place_tmp;
-  string m_place[T][N];
-  int m_type[T][N];
-  double m_double[T][N];
-
+  
   divide_function(){
     t=0;//これは仮
     max=0;
@@ -296,15 +308,6 @@ public:
       right_[i]=0;
       //      place_tmp="";
     }
-  }
-  string re_st(int i, int j){
-    return m_place[i][j];
-  }
-  int re_int(int i, int j){
-    return m_type[i][j];
-  }
-  double re_double(int i, int j){
-    return m_double[i][j];
   }
   int re_nlen(int i){
     return n_len[i];
@@ -370,12 +373,13 @@ public:
       int n;
       n=0;
       while(next_exist(j)){//末端まで行っているものがなければ、まだやる必要があるので
+        //        cout<<"next exist ";
         if(search(j)||depth_of_cur_is_max(j, depth)){//entropy 0 or depth max
           if(search(j)){
-            //cout<<""<<endl;
+            //  cout<<"entropy 0"<<endl;
           }
           if(depth_of_cur_is_max(j, depth)){
-            //cout<<""<<endl;
+            //cout<<"depth max"<<endl;
           }
           for(int i=0;i<16;i++){
             if(check_pwd(j, i)){
@@ -386,15 +390,20 @@ public:
         }
         else{
           //          cout<<"check mae"<<endl;
-          result.a[j][n]=check(j, k, ty, av);
-          //cout<<"check af res:"<<result.a[j][n]<<endl;
+          check_res cha;
+          cha=check(j, k, ty, av);
+          //cout<<"result of check:"<<" cur:"<<cha.cur<<" ty_case1or2:"<<cha.ty_case1or2<<" ty_in_case2:"<<cha.ty_in_case2<<" r:"<<cha.r<<endl;
+          result.type[j][n]=cha.ty_case1or2;
+          result.cur[j][n]=cha.cur;
+          result.ty_case2[j][n]=cha.ty_in_case2;
+          result.r[j][n]=cha.r;
           //cout<<"raa"<<rmax_tmp<<endl;
           //cout<<" mplace:"<<m_place[j][n]<<endl;
-          m_double[j][n]=rmax_tmp;
+          //          m_double[j][n]=rmax_tmp;
           //cout<<"cur"<<curr(j)<<" mplace:"<<m_place[j][n]<<endl;
-          m_place[j][n]=curr(j);
+          //m_place[j][n]=curr(j);
           //cout<<"a"<<endl;
-          m_type[j][n]=ty;
+          //m_type[j][n]=ty;
           //cout<<"mmmmm"<<rmax_tmp<<endl;
           //cout<<"point j:"<<j<<endl;
           next(j);
@@ -403,16 +412,21 @@ public:
         }
       }
       //cout<<"nの個数は:"<<n<<endl;
-      n_len[j]=n;
+      result.n[j]=n;
     }
     return result;
   }
-  int check(int t,int k, int ty, double* av){
+
+  check_res check(int t,int k, int ty, double* av){
     //引数　t:t個目のサブセット K:関数候補の数 ty:識別関数のタイプ
     //cout<<"check called"<<endl;
     type_tmp=ty;
-    int res;
-    res=0;
+    check_res ans;
+    //戻り値の初期化
+    ans.cur=curr(t);
+    ans.ty_case1or2=ty;
+    ans.ty_in_case2=0;
+    ans.r=0;
     //cout<<"aida"<<endl;
     //cout<<"place_tmp, curr :"<<curr(t)<<endl;
     //    cout<<"place:"<<place_tmp<<endl;
@@ -538,7 +552,7 @@ public:
       //cout<<"max:"<<max<<endl;
       //Kkononakade最大となるrで分岐
       //cout<<"rmax:"<<r[max]<<endl;
-      rmax_tmp=r[max];
+      ans.r=r[max];
       for(int j=0;j<16;j++){
         if(check_pwd(t, j)){//データ１６個の中で現在のディレクトリにあるものがあれば
           if(s_out(0,t,j)>r[max]){
@@ -553,11 +567,11 @@ public:
       }
       break;
     case 2://各次元の比較による識別関数のタイプ
-      int pre, lat, tmp__max;
+      int pre, lat;
       max=0;
-      tmp__max=0;
+      //      tmp__max=0;
       for (int i=0;i<k;i++){
-        unsigned int now=(unsigned int)time (0);
+        //unsigned int now=(unsigned int)time (0);
         //srand(now);
         //cout<<"rand:"<<rand()<<endl;
         int tmp_=int(rand()%6);
@@ -597,15 +611,14 @@ public:
         //srand((unsigned)time(NULL));
         //r[i]=rand()%6+4;
         for (int j=0;j<16;j++){
-          //cout<<j<<"番目の関数候補について";
           //          cout<<"tree[t][j]:"<<pwd(t, j)<<" case:"<<tmp_<<endl;
           if(check_pwd(t, j)){//データ１６個の中で現在のディレクトリにあるものについて
             //cout<<"curr["<<t<<"] directory:"<<curr(t)<<"    ";
-
+            //cout<<j<<"番目のデータについて";
+            //cout<<" 比較"<<s_out(pre,t,j)/av[pre]<<":"<<s_out(lat,t,j)/av[lat]<<endl;
             //cout<<"a"<<endl;
             if(s_out(pre,t,j)/av[pre]>s_out(lat, t, j)/av[lat]){
               left++;
-              //cout<<"比較"<<s_out(pre,t,j)/av[pre]<<":"<<s_out(lat,t,j)/av[lat]<<endl;
               //cout<<"b"<<endl;
               //cout<<"left:"<<left<<endl;
               if(s_bool(4,t,j,1)){
@@ -644,7 +657,7 @@ public:
           }
         }
         //        cout<<"H"<<endl;
-        //        cout<<"right:"<<right<<" left:"<<left<<endl;
+        //cout<<"right:"<<right<<" left:"<<left<<endl;
         /*if(left==16||right==16){//エントロピーが０になってもこのタイプではしょうがない
           cout<<"left right::"<<left<<" "<<right<<endl;
           r[i]=0;
@@ -686,39 +699,39 @@ public:
         //I 情報利得
         I[i]=-(double)(left/(left+right))*Hl-(double)(right/(left+right))*Hr;
         //cout<<"I["<<i<<"]:"<<I[i]<<endl;
-        if(I[i]>I[max]){
+        if(I[i]>I[max]||i==0){
           max=i;//情報利得が最大となるものの更新
-          tmp__max=tmp_;
+          ans.ty_in_case2=tmp_;
         }
         //cout<<"max:"<<max<<endl;
       }
-      //Kkononakade最大となるrで分岐
+      //cout<<"ans.ty_in_case2 :"<<ans.ty_in_case2<<endl;
+      //Kkononakade最大となるcaseで分岐
       for(int i=0;i<16;i++){
         if(check_pwd(t, i)){//データ１６個の中で現在のディレクトリにあるものがあれば
-          switch (tmp__max){
+          switch (ans.ty_in_case2){
           case 0:
             pre=0;lat=1;
-            res=0;
             //cout<<"tmp__max case:"<<tmp__max<<endl;
             break;
           case 1:
-            pre=0;lat=2;res=1;
+            pre=0;lat=2;
             //cout<<"tmp__max case:"<<tmp__max<<endl;
             break;
           case 2:
-            pre=0;lat=3;res=2;
+            pre=0;lat=3;
             //cout<<"tmp__max case:"<<tmp__max<<endl;
             break;
           case 3:
-            pre=1;lat=2;res=3;
+            pre=1;lat=2;
             //cout<<"tmp__max case:"<<tmp__max<<endl;
             break;
           case 4:
-            pre=1;lat=3;res=4;
+            pre=1;lat=3;
             //cout<<"tmp__max case:"<<tmp__max<<endl;
             break;
           case 5:
-            pre=2;lat=3;res=5;
+            pre=2;lat=3;
             //cout<<"tmp__max case:"<<tmp__max<<endl;
             break;
           }
@@ -734,7 +747,7 @@ public:
       }
       break;
     }
-    return res;
+    return ans;
   }
 
 };
@@ -744,9 +757,7 @@ public:
   Test(){
   }
   bool test(double d1,double d2,double d3,double d4,int d5, divide_function df, div_ans ans, double* av){
-    //4次元データとそのクラスの情報、合計5次元  T個のサブセットにおける各ノードにおける必要情報3次元
     string d;
-    bool t;
     double p_1[T], p_2[T], p_3[T];
     for(int i=0;i<T;i++){
       p_1[i]=0;
@@ -759,12 +770,12 @@ public:
       int n;
       n=0;
       //cout<<"i changed to "<<i<<endl;
-      while(n!=df.re_nlen(i)){
-        if(d==df.re_st(i, n)){//ディレクトリが一致したものについて
-          switch (df.re_int(i, n)){//ty候補のタイプ
+      while(n!=ans.n[i]){
+        if(d==ans.cur[i][n]){//ディレクトリが一致したものについて
+          switch (ans.type[i][n]){//ty候補のタイプ
           case 1:       //候補タイプ1 変数の大きさについて単純にしきい値と比較
             //    cout<<"基準r："<<df.re_double(i, n)<<endl;
-            if(d1>df.re_double(i,n)){//基準より大きければleft
+            if(d1>ans.r[i][n]){//基準より大きければleft
               d.append(1, 'l');
               //cout<<"d changed to:"<<d<<endl;
               n=0;//ディレクトリが下がればnを初期化
@@ -780,27 +791,40 @@ public:
           case 2:
             //cout<<"case :2  case："<<ans.a[i][n]<<endl;
             int pre, lat;
-            switch (ans.a[i][n]){
+            double cls, cls2;
+            switch (ans.ty_case2[i][n]){
             case 0:
               pre=0;lat=1;
+              cls=d1;
+              cls2=d2;
               break;
             case 1:
               pre=0;lat=2;
+              cls=d1;
+              cls2=d3;
               break;
             case 2:
               pre=0;lat=3;
+              cls=d1;
+              cls2=d4;
               break;
             case 3:
               pre=1;lat=2;
+              cls=d2;
+              cls2=d3;
               break;
             case 4:
               pre=1;lat=3;
+              cls=d2;
+              cls2=d4;
               break;
             case 5:
               pre=2;lat=3;
+              cls=d3;
+              cls2=d4;
               break;
             }
-            if(df.s_out(pre,t,i)/av[pre]>df.s_out(lat, t, i)/av[lat]){
+            if(cls/av[pre]>cls2/av[lat]){
               d.append(1, 'l');
               //cout<<"d changed to:"<<d<<endl;
               n=0;//ディレクトリが下がればnを初期化
@@ -892,12 +916,12 @@ int main (int argc, char *argv[]){
   while(getline(ifs, str)) {
     a[i]=0; b[i]=0; c[i]=0,d[i]=0;
     sscanf(str.data(), "%lf%lf%lf%lf%d", &a[i], &b[i], &c[i], &d[i], &e[i]);
-    /*cout << "a = " << a[i] ;
-      cout << " b = " << b[i] ;
-      cout << " c = " << c[i] ;
-      cout << " d = " << d[i] ;
-      cout << " e = " << e[i] << endl;
-    */
+    //cout <<"データの読み込み "<< i<<"番目 " << a[i] ;
+    //cout <<" "<< b[i] ;
+    //cout <<" "<< c[i] ;
+    //cout <<" "<< d[i] ;
+    //cout <<" "<< e[i] << endl;
+    
     /*cout << i<< endl;*/
     i++;
   } 
@@ -920,31 +944,33 @@ int main (int argc, char *argv[]){
   divide_function s;
   for (int i=0;i<T;i++){//T個のサブセットについて
     for (int j=0;j<16;j++){
-      s.in(i, j, rand()%130);
-      //cout << rand()%150<<endl;
+      int ttmp;
+      ttmp=rand()%130;
+      s.in(i, j, ttmp);
+      //cout << ttmp<<endl;
       //cout<< "i"<<i<<"   j"<<j<<endl;
     }
   }
-  s.print();
+    s.print();
     
 
   //サブセットの数だけ木を作成する
 
   //  Tree tr;
   //divide_function dv;
-  /*tr.pwd(0);
-    tr.left(0);
-    tr.right(0);
-    tr.end(0);
-    dv.check(1, 1);*/
+  // tr.pwd(0);
+  //   tr.left(0);
+  //   tr.right(0);
+  //   tr.end(0);
+  //   dv.check(1, 1);
   //s.check(2,1);
   //"lrle"
   //サブセットデータに現在のディレクトリ情報を持たせておく
   //if エントロピーが０ もしくは深さmax 何もない
   //else 
-  for(i=0;i<16;i++){
+  //for(i=0;i<16;i++){
     //tr.pwd(i);
-  }
+  //}
   //s.next();s.state();
   //s.next();  s.next();  s.next();
 
@@ -953,7 +979,7 @@ int main (int argc, char *argv[]){
       res[i][j]=0;
     }
     }*/
-  div_ans aans=s.learn(D, K, 1, T, av);
+  div_ans aans=s.learn(D, K, 2, T, av);
   /*for(int i=0;i<T;i++){
     for(int j=0;j<T;j++){
       cout<<res[i][j]<<endl;
